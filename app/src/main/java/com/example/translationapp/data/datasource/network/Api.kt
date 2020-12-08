@@ -2,7 +2,6 @@ package com.example.translationapp.data.datasource.network
 
 import com.example.translationapp.data.model.SearchResult
 import io.reactivex.Observable
-import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 

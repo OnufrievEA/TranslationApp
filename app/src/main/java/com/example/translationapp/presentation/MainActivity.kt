@@ -7,28 +7,29 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.translationapp.R
-import com.example.translationapp.data.model.SearchResult
 
-class MainActivity : AppCompatActivity(), IView<List<SearchResult>> {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var adapter: MainAdapter
-    private lateinit var presenter: Presenter
-
     private lateinit var searchBtn: Button
     private lateinit var searchEt: EditText
+
+    private val viewModel: MainViewModel by lazy {
+        ViewModelProvider(this).get(MainViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        presenter = Presenter(this)
-        lifecycle.addObserver(presenter)
-
         initView()
         initRecyclerView()
+        viewModel.getViewState().observe(this, Observer { adapter.data = it })
     }
 
     private fun initView() {
@@ -52,11 +53,7 @@ class MainActivity : AppCompatActivity(), IView<List<SearchResult>> {
             imm.hideSoftInputFromWindow(window.decorView.rootView.windowToken, 0)
 
             val word = searchEt.text.toString()
-            presenter.getData(word)
+            viewModel.getData(word)
         }
-    }
-
-    override fun refreshRecyclerView(data: List<SearchResult>) {
-        adapter.data = data
     }
 }

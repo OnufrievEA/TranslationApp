@@ -1,8 +1,8 @@
 package com.example.translationapp.presentation
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import com.example.translationapp.data.model.SearchResult
 import com.example.translationapp.domain.interactor.Interactor
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -10,29 +10,13 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 
-class Presenter(
-    private val view: IView<List<SearchResult>>,
+class MainViewModel(
     private val interactor: Interactor = Interactor(),
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
-) : LifecycleObserver {
+) : ViewModel() {
+    private val viewState: MutableLiveData<List<SearchResult>> = MutableLiveData()
 
-    private var currentView: IView<List<SearchResult>>? = null
-
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun attachView() {
-        if (view != currentView) {
-            currentView = view
-        }
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun detachView() {
-        compositeDisposable.clear()
-        if (view == currentView) {
-            currentView = null
-        }
-    }
+    fun getViewState(): LiveData<List<SearchResult>> = viewState
 
     fun getData(word: String) {
         compositeDisposable.add(
@@ -41,7 +25,7 @@ class Presenter(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableObserver<List<SearchResult>>() {
                     override fun onNext(t: List<SearchResult>) {
-                        currentView?.refreshRecyclerView(t)
+                        viewState.value = t
                     }
 
                     override fun onError(e: Throwable) {
@@ -49,9 +33,12 @@ class Presenter(
 
                     override fun onComplete() {
                     }
-
                 })
         )
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        compositeDisposable.clear()
+    }
 }
